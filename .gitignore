@@ -1,0 +1,14 @@
+# Build output
+output/
+qemu-8.0.0/build/
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
