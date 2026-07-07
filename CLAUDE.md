@@ -2,6 +2,9 @@
 
 Quard Star — 基于 QEMU 8.0.0 的自定义 RISC-V 多核异构板卡仿真平台。用于学习和验证 RISC-V 架构、SoC 外设驱动及嵌入式 Linux 系统。
 
+- **硬件架构**：多核 RISC-V SoC 仿真板，包含 CPU 集群、丰富外设（UART、I2C、SPI、网卡、USB、LCD 等）。
+- **软件启动链**：Mask ROM → OpenSBI → U-Boot → Linux Kernel → rootfs。
+
 ## 技术栈
 
 - **虚拟化**: QEMU 8.0.0（C 语言，meson 构建系统）
@@ -88,10 +91,6 @@ git diff main..HEAD
 ## 参考教程
 
 [Quard Star 教程](https://quard-star-tutorial.readthedocs.io/zh-cn/latest/index.html) — 本项目全程跟随此教程逐步构建。
-
-- **硬件架构**：多核 RISC-V SoC 仿真板，包含 CPU 集群、丰富外设（UART、I2C、SPI、网卡、USB、LCD 等）。
-
-- **软件启动链**：Mask ROM → OpenSBI → U-Boot → Linux Kernel → rootfs。
 
 - **章节概览**：
 
