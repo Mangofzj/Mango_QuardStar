@@ -17,7 +17,6 @@ Quard Star — 基于 QEMU 8.0.0 的自定义 RISC-V 多核异构板卡仿真平
 - QEMU 采用 out-of-tree 构建，编译产物在 `qemu-8.0.0/build/`，禁止提交
 - 所有对 QEMU 源码的定制修改集中在 `hw/riscv/quard_star.*` 及相关文件中
 - 构建输出目录 `output/` 为安装产物，禁止提交
-- 板卡初始化代码遵循 QEMU machine model 规范（TypeInfo + MachineClass）
 
 ## 目录结构
 
@@ -49,23 +48,7 @@ cd qemu-8.0.0 && make -j$(nproc)
 
 ### 审查
 
-```bash
-# 查看当前分支状态
-git status
-
-# 查看提交历史
-git log --oneline --graph
-
-# 查看与 main 的差异
-git diff main..HEAD
-```
-
 ### 测试
-
-```bash
-# 快速检查 QEMU 是否能启动
-./output/qemu/bin/qemu-system-riscv64 -M quard_star -nographic
-```
 
 ## 编码规范
 
