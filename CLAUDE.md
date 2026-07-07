@@ -70,6 +70,7 @@ git diff main..HEAD
 ## 编码规范
 
 ### 注释风格
+
 - 注释参考 Linux 内核风格：解释某一句时，与代码同行，代码和 `//` 间留两个空格，`//` 和注释内容间留一个空格；解释某一段时，放代码上方，`/*` 与当前缩进层级对齐，`/*` 和注释内容间留一个空格。
 - 文件/函数头采用 Doxygen 风格：文件头描述职责，函数头描述功能，按需使用 @param/@return/@note 分段说明。
 - 语句在准确的前提下保持精简：文件/函数头能一行说清不写多行；注释只补充无法自解释的关键信息。
@@ -90,10 +91,9 @@ git diff main..HEAD
 
 ## 参考教程
 
-[Quard Star 教程](https://quard-star-tutorial.readthedocs.io/zh-cn/latest/index.html) — 本项目全程跟随此教程逐步构建。
+- [Quard Star 教程](https://quard-star-tutorial.readthedocs.io/zh-cn/latest/index.html) — 本项目全程跟随此教程逐步构建。
 
 - **章节概览**：
-
 | 阶段 | 章节 | 内容 |
 |------|------|------|
 | 板卡基础 | ch1-ch4 | 搭建 QEMU 环境、添加 Quard-Star 板、中断控制器、串口、pflash、测试固件 |
@@ -101,3 +101,5 @@ git diff main..HEAD
 | 内核与文件系统 | ch10-ch15 | virtio/fw_cfg、Linux Kernel 启动、busybox、根文件系统、动态链接、多用户 |
 | 外设与应用 | ch16-ch25 | Framebuffer、bash/Qt/网络/SSHD、FreeRTOS 移植等 |
 | 扩展 | ext1-ext6 | kgdb 调试、gcc profile、gdbstub、CAN 总线、ifplugd 等 |
+
+- **最新源码**：`/home/mango/embedded/mit/Quard-Star/quard_star_tutorial` — 教程对应的完整项目源码，包含 QEMU 8.0.0、Linux 6.1.11、U-Boot 2023.04、OpenSBI 1.2、Busybox 1.33.2 等。讲解时优先参考此目录中的实际代码。
