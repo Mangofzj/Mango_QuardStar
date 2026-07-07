@@ -26,7 +26,9 @@ Quard Star — 基于 QEMU 8.0.0 的自定义 RISC-V 多核异构板卡仿真平
 ├── output/qemu/             # 编译安装输出（bin/include/libexec/share）
 └── qemu-8.0.0/              # QEMU 8.0.0 源码（含定制修改）
     ├── hw/riscv/            # RISC-V 板卡模型
-    │   └── quard_star.c     # Quard Star 板卡定义（自定义）
+    │   └── quard_star.c     # Quard Star 板卡实现（自定义）
+    ├── include/hw/riscv/    # RISC-V 板卡头文件
+    │   └── quard_star.h     # Quard Star 板卡头文件（自定义）
     ├── build/               # meson 编译中间产物（已忽略）
     └── ...                  # 其余 QEMU 原生源码
 ```
@@ -48,14 +50,35 @@ cd qemu-8.0.0 && make -j$(nproc)
 
 ### 审查
 
+```bash
+# 查看当前分支状态
+git status
+
+# 查看提交历史
+git log --oneline --graph
+
+# 查看与 main 的差异
+git diff main..HEAD
+```
+
 ### 测试
+
+```bash
+# 编译验证
+cd qemu-8.0.0 && make -j$(nproc)
+
+# 快速检查 QEMU 能否识别板卡
+./output/qemu/bin/qemu-system-riscv64 -M quard-star -nographic
+```
 
 ## 编码规范
 
 ### 注释风格
 
-- 注释遵循 C 语言常见规范：解释某一句时，与代码同行，代码和 `//` 间留两个空格，`//` 和注释内容间留一个空格；解释某一段时，放代码上方，`/*` 与当前缩进层级对齐，`/*` 和注释内容间留一个空格。
-- 文件/函数头采用 Doxygen 风格：文件头描述职责，函数头描述功能，使用 @brief/@note/@param/@return 分段说明。
+- 结构体、枚举、数组、宏等定义使用 `/* 描述 */` 格式，与缩进对齐，`/*` 和内容间留一个空格。
+- 函数注释采用 Doxygen 风格，必须包含 `@brief`、`@note`、`@param`、`@return` 四字段；无内容时填"无"。
+- 行内注释与代码同行，代码和 `//` 间留两个空格，`//` 和注释内容间留一个空格。
+- 段注释放在代码上方，`/*` 与当前缩进层级对齐。
 - 语句在准确的前提下保持精简：文件/函数头能一行说清不写多行；注释只补充无法自解释的关键信息。
 
 ### 命名风格
@@ -63,7 +86,7 @@ cd qemu-8.0.0 && make -j$(nproc)
 - 函数名: `snake_case`，符合 QEMU code style（如 `quard_star_machine_init`）
 - 宏 / 常量: `UPPER_CASE`（如 `QUARD_STAR_BASE_ADDR`）
 - 类型名: `PascalCase`（如 `QuardStarMachineState`）
-- TypeInfo 变量名: `xxx_info` 结尾（如 `quard_star_machine_info`）
+- TypeInfo 变量名: `xxx_info` 结尾（如 `quard_star_machine_typeinfo`）
 
 ## Git Flow
 
