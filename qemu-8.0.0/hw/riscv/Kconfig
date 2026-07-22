@@ -78,6 +78,12 @@ config SIFIVE_U
     select SSI_SD
     select UNIMP
 
+config QUARD_STAR
+    bool
+    select RISCV_ACLINT
+    select SIFIVE_PLIC
+    select SERIAL
+
 config SPIKE
     bool
     select RISCV_NUMA
