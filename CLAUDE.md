@@ -108,4 +108,4 @@ cd qemu-8.0.0 && make -j$(nproc)
 | 外设与应用 | ch16-ch25 | Framebuffer、bash/Qt/网络/SSHD、FreeRTOS 移植等 |
 | 扩展 | ext1-ext6 | kgdb 调试、gcc profile、gdbstub、CAN 总线、ifplugd 等 |
 
-- **最新源码**：`/home/mango/embedded/mit/Quard-Star/quard_star_tutorial` — 教程对应的完整项目源码，包含 QEMU 8.0.0、Linux 6.1.11、U-Boot 2023.04、OpenSBI 1.2、Busybox 1.33.2 等。讲解时优先参考此目录中的实际代码。
+- **最新源码**：`/home/mango/embedded/mit/quard_star/quard_star_tutorial` — 教程对应的完整项目源码，包含 QEMU 8.0.0、Linux 6.1.11、U-Boot 2023.04、OpenSBI 1.2、Busybox 1.33.2 等。讲解时优先参考此目录中的实际代码。参考源码时**始终保持在 main 分支**，不要切到 chapter tag。如需了解某章节的增量改动，用 `git diff chN-1..chN` 查看概念层面的变化，再映射到 qemu-8.0.0 API 来实现。
