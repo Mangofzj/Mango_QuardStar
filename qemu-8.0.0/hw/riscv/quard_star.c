@@ -1,7 +1,7 @@
 /*
  * QEMU RISC-V Quard Star Board — 板卡初始化。
  *
- * @brief 职责：CPU 创建、内存映射、中断控制器、复位向量。
+ * @brief 职责：CPU 创建、内存映射、中断控制器、串口、pflash、复位向量。
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -25,6 +25,10 @@
 #include "sysemu/device_tree.h"
 #include "sysemu/sysemu.h"
 
+/* CPU 总数 */
+#define QUARD_STAR_CPUS_TOTAL \
+    (QUARD_STAR_MANAGEMENT_CPU_COUNT + QUARD_STAR_COMPUTE_CPU_COUNT)
+
 /* 内存地址映射 */
 static const MemMapEntry quard_star_memmap[] = {
     [QUARD_STAR_MROM]  = { 0x00000000,   0x20000 },  // 128KB Mask ROM
@@ -32,8 +36,66 @@ static const MemMapEntry quard_star_memmap[] = {
     [QUARD_STAR_CLINT] = { 0x02000000,   0x10000 },  // ACLINT
     [QUARD_STAR_PLIC]  = { 0x0c000000, 0x4000000 },  // PLIC
     [QUARD_STAR_UART0] = { 0x10000000,    0x1000 },  // 串口 0
+    [QUARD_STAR_UART1] = { 0x10001000,    0x1000 },  // 串口 1
+    [QUARD_STAR_UART2] = { 0x10002000,    0x1000 },  // 串口 2
+    [QUARD_STAR_FLASH] = { 0x20000000, 0x2000000 },  // pflash 32MB
     [QUARD_STAR_DRAM]  = { 0x80000000,       0x0 },  // DDR，大小由 -m 决定
 };
+
+/**
+ * @brief 创建 pflash 设备并关联到 -drive if=pflash
+ * @note  属性和别名分别用于配置 flash 参数及暴露给命令行
+ * @param s             板卡状态
+ * @param name          设备名
+ * @param alias_prop_name  别名属性名
+ * @return pflash 设备指针
+ */
+static PFlashCFI01 *quard_star_flash_create(QuardStarState *s,
+                                            const char *name,
+                                            const char *alias_prop_name)
+{
+    DeviceState *dev = qdev_new(TYPE_PFLASH_CFI01);
+
+    qdev_prop_set_uint64(dev, "sector-length", QUARD_STAR_FLASH_SECTOR_SIZE);
+    qdev_prop_set_uint8(dev, "width", 4);
+    qdev_prop_set_uint8(dev, "device-width", 2);
+    qdev_prop_set_bit(dev, "big-endian", false);
+    qdev_prop_set_uint16(dev, "id0", 0x89);
+    qdev_prop_set_uint16(dev, "id1", 0x18);
+    qdev_prop_set_uint16(dev, "id2", 0x00);
+    qdev_prop_set_uint16(dev, "id3", 0x00);
+    qdev_prop_set_string(dev, "name", name);
+
+    object_property_add_child(OBJECT(s), name, OBJECT(dev));
+    object_property_add_alias(OBJECT(s), alias_prop_name,
+                              OBJECT(dev), "drive");
+
+    return PFLASH_CFI01(dev);
+}
+
+/**
+ * @brief 将 pflash 映射到系统地址空间
+ * @note  设置 block 数量后 realize，再挂载 MMIO 区域
+ * @param flash  pflash 设备
+ * @param base   基地址
+ * @param size   总大小
+ * @param sysmem 系统地址空间
+ * @return 无
+ */
+static void quard_star_flash_map(PFlashCFI01 *flash,
+                                 hwaddr base, hwaddr size,
+                                 MemoryRegion *sysmem)
+{
+    DeviceState *dev = DEVICE(flash);
+
+    assert(QEMU_IS_ALIGNED(size, QUARD_STAR_FLASH_SECTOR_SIZE));
+    assert(size / QUARD_STAR_FLASH_SECTOR_SIZE <= UINT32_MAX);
+    qdev_prop_set_uint32(dev, "num-blocks", size / QUARD_STAR_FLASH_SECTOR_SIZE);
+    sysbus_realize_and_unref(SYS_BUS_DEVICE(dev), &error_fatal);
+
+    memory_region_add_subregion(sysmem, base,
+                                sysbus_mmio_get_region(SYS_BUS_DEVICE(dev), 0));
+}
 
 /**
  * @brief 将复位向量写入 Mask ROM
@@ -135,7 +197,7 @@ static void quard_star_cpu_create(MachineState *machine)
 
 /**
  * @brief Quard Star 板卡初始化入口
- * @note  依次初始化 MROM、SRAM、DRAM 内存区域，创建 CPU Cluster，设置复位向量
+ * @note  依次初始化 MROM、SRAM、DRAM，创建 CPU Cluster、CLINT、PLIC、串口、pflash
  * @param machine 机器状态
  * @return 无
  */
@@ -146,6 +208,9 @@ static void quard_star_machine_init(MachineState *machine)
     MemoryRegion *mask_rom = g_new(MemoryRegion, 1);
     MemoryRegion *sram_mem = g_new(MemoryRegion, 1);
     MemoryRegion *main_mem = g_new(MemoryRegion, 1);
+    char *plic_hart_config;
+    size_t plic_hart_config_len;
+    int i;
 
     /* MROM */
     memory_region_init_rom(mask_rom, NULL, "riscv_quard_star_board.mrom",
@@ -168,8 +233,62 @@ static void quard_star_machine_init(MachineState *machine)
     /* CPU */
     quard_star_cpu_create(machine);
 
-    /* Reset vector: 跳转到 MROM 起始地址 0x00000000 */
-    quard_star_setup_rom_reset_vec(machine, &s->c_cpus, 0x00000000,
+    /* CLINT: ACLINT 软件中断 + 定时器，覆盖全部 8 个 hart */
+    riscv_aclint_swi_create(quard_star_memmap[QUARD_STAR_CLINT].base,
+                            0, QUARD_STAR_CPUS_TOTAL, false);
+    riscv_aclint_mtimer_create(
+        quard_star_memmap[QUARD_STAR_CLINT].base + RISCV_ACLINT_SWI_SIZE,
+        quard_star_memmap[QUARD_STAR_CLINT].size - RISCV_ACLINT_SWI_SIZE,
+        0, QUARD_STAR_CPUS_TOTAL, RISCV_ACLINT_DEFAULT_MTIMECMP,
+        RISCV_ACLINT_DEFAULT_MTIME, RISCV_ACLINT_DEFAULT_TIMEBASE_FREQ, true);
+
+    /* PLIC：管理外设中断，全部 hart 共享 */
+    plic_hart_config_len = (strlen(QUARD_STAR_PLIC_HART_CONFIG) + 1)
+                           * QUARD_STAR_CPUS_TOTAL;
+    plic_hart_config = g_malloc0(plic_hart_config_len);
+    for (i = 0; i < QUARD_STAR_CPUS_TOTAL; i++) {
+        if (i != 0) {
+            strncat(plic_hart_config, ",", plic_hart_config_len);
+        }
+        strncat(plic_hart_config, QUARD_STAR_PLIC_HART_CONFIG,
+                plic_hart_config_len);
+        plic_hart_config_len -= (strlen(QUARD_STAR_PLIC_HART_CONFIG) + 1);
+    }
+    s->plic = sifive_plic_create(
+        quard_star_memmap[QUARD_STAR_PLIC].base,
+        plic_hart_config, QUARD_STAR_CPUS_TOTAL, 0,
+        QUARD_STAR_PLIC_NUM_SOURCES,
+        QUARD_STAR_PLIC_NUM_PRIORITIES,
+        QUARD_STAR_PLIC_PRIORITY_BASE,
+        QUARD_STAR_PLIC_PENDING_BASE,
+        QUARD_STAR_PLIC_ENABLE_BASE,
+        QUARD_STAR_PLIC_ENABLE_STRIDE,
+        QUARD_STAR_PLIC_CONTEXT_BASE,
+        QUARD_STAR_PLIC_CONTEXT_STRIDE,
+        quard_star_memmap[QUARD_STAR_PLIC].size);
+    g_free(plic_hart_config);
+
+    /* 串口：三个 NS16550A，中断连到 PLIC */
+    serial_mm_init(system_memory, quard_star_memmap[QUARD_STAR_UART0].base,
+                   0, qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_UART0_IRQ),
+                   399193, serial_hd(0), DEVICE_LITTLE_ENDIAN);
+    serial_mm_init(system_memory, quard_star_memmap[QUARD_STAR_UART1].base,
+                   0, qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_UART1_IRQ),
+                   399193, serial_hd(1), DEVICE_LITTLE_ENDIAN);
+    serial_mm_init(system_memory, quard_star_memmap[QUARD_STAR_UART2].base,
+                   0, qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_UART2_IRQ),
+                   399193, serial_hd(2), DEVICE_LITTLE_ENDIAN);
+
+    /* pflash：固件载体，通过 -drive if=pflash 加载 */
+    s->flash = quard_star_flash_create(s, "quard-star.flash0", "pflash0");
+    pflash_cfi01_legacy_drive(s->flash, drive_get(IF_PFLASH, 0, 0));
+    quard_star_flash_map(s->flash, quard_star_memmap[QUARD_STAR_FLASH].base,
+                         quard_star_memmap[QUARD_STAR_FLASH].size,
+                         system_memory);
+
+    /* 复位向量：跳转到 pflash 起始地址 */
+    quard_star_setup_rom_reset_vec(machine, &s->c_cpus,
+                                   quard_star_memmap[QUARD_STAR_FLASH].base,
                                    quard_star_memmap[QUARD_STAR_MROM].base,
                                    quard_star_memmap[QUARD_STAR_MROM].size,
                                    0x0);
@@ -188,7 +307,7 @@ static void quard_star_machine_class_init(ObjectClass *oc, void *data)
 
     mc->desc = "RISC-V Quard Star Board";
     mc->init = quard_star_machine_init;
-    mc->max_cpus = QUARD_STAR_MANAGEMENT_CPU_COUNT + QUARD_STAR_COMPUTE_CPU_COUNT;
+    mc->max_cpus = QUARD_STAR_CPUS_TOTAL;
     mc->min_cpus = mc->max_cpus;
     mc->default_cpu_type = TYPE_RISCV_CPU_BASE;
 }
