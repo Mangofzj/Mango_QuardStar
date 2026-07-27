@@ -53,9 +53,9 @@ enum {
 
 /* 外设中断号 */
 enum {
-    QUARD_STAR_UART0_IRQ   = 10,
-    QUARD_STAR_UART1_IRQ   = 11,
-    QUARD_STAR_UART2_IRQ   = 12,
+    QUARD_STAR_UART0_IRQ = 10,
+    QUARD_STAR_UART1_IRQ = 11,
+    QUARD_STAR_UART2_IRQ = 12,
 };
 
 #define QUARD_STAR_PLIC_HART_CONFIG    "MS"

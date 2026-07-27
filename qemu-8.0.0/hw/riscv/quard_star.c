@@ -31,15 +31,15 @@
 
 /* 内存地址映射 */
 static const MemMapEntry quard_star_memmap[] = {
-    [QUARD_STAR_MROM]  = { 0x00000000,   0x20000 },  // 128KB Mask ROM
-    [QUARD_STAR_SRAM]  = { 0x00020000,   0xe0000 },  // 896KB SRAM
-    [QUARD_STAR_CLINT] = { 0x02000000,   0x10000 },  // ACLINT
+    [QUARD_STAR_MROM]  = { 0x00000000, 0x20000 },  // 128KB Mask ROM
+    [QUARD_STAR_SRAM]  = { 0x00020000, 0xe0000 },  // 896KB SRAM
+    [QUARD_STAR_CLINT] = { 0x02000000, 0x10000 },  // ACLINT
     [QUARD_STAR_PLIC]  = { 0x0c000000, 0x4000000 },  // PLIC
-    [QUARD_STAR_UART0] = { 0x10000000,    0x1000 },  // 串口 0
-    [QUARD_STAR_UART1] = { 0x10001000,    0x1000 },  // 串口 1
-    [QUARD_STAR_UART2] = { 0x10002000,    0x1000 },  // 串口 2
+    [QUARD_STAR_UART0] = { 0x10000000, 0x1000 },  // 串口 0
+    [QUARD_STAR_UART1] = { 0x10001000, 0x1000 },  // 串口 1
+    [QUARD_STAR_UART2] = { 0x10002000, 0x1000 },  // 串口 2
     [QUARD_STAR_FLASH] = { 0x20000000, 0x2000000 },  // pflash 32MB
-    [QUARD_STAR_DRAM]  = { 0x80000000,       0x0 },  // DDR，大小由 -m 决定
+    [QUARD_STAR_DRAM]  = { 0x80000000, 0x0 },  // DDR，大小由 -m 决定
 };
 
 /**
@@ -324,11 +324,11 @@ static void quard_star_machine_instance_init(Object *obj)
 
 /* 板卡类型信息 */
 static const TypeInfo quard_star_machine_typeinfo = {
-    .name           = TYPE_RISCV_QUARD_STAR_MACHINE,
-    .parent         = TYPE_MACHINE,
-    .class_init     = quard_star_machine_class_init,
-    .instance_init  = quard_star_machine_instance_init,
-    .instance_size  = sizeof(QuardStarState),
+    .name          = TYPE_RISCV_QUARD_STAR_MACHINE,
+    .parent        = TYPE_MACHINE,
+    .class_init    = quard_star_machine_class_init,
+    .instance_init = quard_star_machine_instance_init,
+    .instance_size = sizeof(QuardStarState),
 };
 
 /**
