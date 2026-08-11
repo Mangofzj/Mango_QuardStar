@@ -28,3 +28,15 @@ rm -rf fw.bin
 dd of=fw.bin bs=1k count=32k if=/dev/zero 2>/dev/null
 dd of=fw.bin bs=1k conv=notrunc seek=0 if=fsbl.bin 2>/dev/null
 cd $SHELL_FOLDER
+
+# OpenSBI
+if [ ! -d "$SHELL_FOLDER/output/opensbi" ]; then
+mkdir -p "$SHELL_FOLDER/output/opensbi"
+fi
+cd opensbi-1.2
+make CROSS_COMPILE=${CROSS_PREFIX} PLATFORM=quard_star -j$(nproc)
+cp build/platform/quard_star/firmware/fw_jump.bin $SHELL_FOLDER/output/opensbi/
+cp build/platform/quard_star/firmware/fw_jump.elf $SHELL_FOLDER/output/opensbi/
+${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
+    $SHELL_FOLDER/output/opensbi/fw_jump.elf > $SHELL_FOLDER/output/opensbi/fw_jump.lst
+cd $SHELL_FOLDER
