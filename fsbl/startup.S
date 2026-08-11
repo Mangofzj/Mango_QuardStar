@@ -1,5 +1,5 @@
 /*
- * ZSBL — Zero Stage Boot Loader。
+ * FSBL — First Stage Boot Loader。
  * 从 pflash (0x20000000) 启动，向 UART0 打印 "Hello Quard Star Board!\n"
  * 后进入死循环。只有 hart 0 执行，其余 hart 自旋等待。
  *
