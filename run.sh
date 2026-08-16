@@ -1,6 +1,6 @@
 #!/bin/bash
-# Quard Star — QEMU 启动脚本（ch4 FSBL 测试）
-# FSBL 从 pflash 启动，向 UART0 打印 "Hello Quard Star Board!"。
+# Quard Star — QEMU 启动脚本（ch6 设备树与 OpenSBI 加载运行）
+# FSBL 从 Parallel NOR Flash 启动，加载 OpenSBI 与设备树到 DDR 后跳转执行。
 
 SHELL_FOLDER=$(cd "$(dirname "$0")";pwd)
 

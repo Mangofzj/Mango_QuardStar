@@ -21,13 +21,7 @@ ${CROSS_PREFIX}gcc -nostartfiles -fno-pie -T./fsbl.lds -Wl,-Map=$SHELL_FOLDER/ou
 ${CROSS_PREFIX}objcopy -O binary -S $SHELL_FOLDER/output/fsbl/fsbl.elf $SHELL_FOLDER/output/fsbl/fsbl.bin
 ${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
     $SHELL_FOLDER/output/fsbl/fsbl.elf > $SHELL_FOLDER/output/fsbl/fsbl.lst
-
-# 打包 pflash 镜像（32MB，FSBL 放在偏移 0）
-cd $SHELL_FOLDER/output/fsbl
-rm -rf fw.bin
-dd of=fw.bin bs=1k count=32k if=/dev/zero 2>/dev/null
-dd of=fw.bin bs=1k conv=notrunc seek=0 if=fsbl.bin 2>/dev/null
-cd $SHELL_FOLDER
+cd ..
 
 # OpenSBI
 if [ ! -d "$SHELL_FOLDER/output/opensbi" ]; then
@@ -39,4 +33,22 @@ cp build/platform/quard_star/firmware/fw_jump.bin $SHELL_FOLDER/output/opensbi/
 cp build/platform/quard_star/firmware/fw_jump.elf $SHELL_FOLDER/output/opensbi/
 ${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
     $SHELL_FOLDER/output/opensbi/fw_jump.elf > $SHELL_FOLDER/output/opensbi/fw_jump.lst
+cd ..
+
+# 设备树（DTS → DTB）
+if [ ! -d "$SHELL_FOLDER/output/sbi" ]; then
+mkdir -p "$SHELL_FOLDER/output/sbi"
+fi
+cd dts
+cpp -nostdinc -I . -undef -x assembler-with-cpp quard_star_sbi.dts | \
+    dtc -I dts -O dtb -o $SHELL_FOLDER/output/sbi/quard_star_sbi.dtb
+cd ..
+
+# 打包 Parallel NOR Flash 镜像（32MB）
+cd $SHELL_FOLDER/output/fsbl
+rm -rf fw.bin
+dd of=fw.bin bs=1k count=32k if=/dev/zero 2>/dev/null
+dd of=fw.bin bs=1k conv=notrunc seek=0 if=fsbl.bin 2>/dev/null
+dd of=fw.bin bs=1k conv=notrunc seek=512 if=$SHELL_FOLDER/output/sbi/quard_star_sbi.dtb 2>/dev/null
+dd of=fw.bin bs=1k conv=notrunc seek=2K if=$SHELL_FOLDER/output/opensbi/fw_jump.bin 2>/dev/null
 cd $SHELL_FOLDER
