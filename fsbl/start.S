@@ -4,7 +4,7 @@
  * 只有 hart 0 执行加载，其余 hart 自旋等待 OpenSBI 唤醒。
  *
  * Parallel NOR Flash 布局：
- *   偏移 0x80000   sbi.dtb
+ *   偏移 0x80000   quard_star_sbi.dtb
  *   偏移 0x200000  fw_jump.bin
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>
@@ -47,7 +47,7 @@ _start:
     add     a2, a1, t2  // a2 = 0xC0000000
     load_data    a0, a1, a2
 
-    /* 加载 sbi.dtb：Parallel NOR Flash 0x20080000 → DDR 0xBFF00000（512KB） */
+    /* 加载 quard_star_sbi.dtb：Parallel NOR Flash 0x20080000 → DDR 0xBFF00000（512KB） */
     li      a0, 0x2008
     slli    a0, a0, 16  // a0 = 0x20080000
     li      a1, 0xbff
