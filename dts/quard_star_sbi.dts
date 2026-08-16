@@ -1,0 +1,43 @@
+/*
+ * Quard Star OpenSBI 设备树。
+ * 在 quard_star.dtsi 基础上使能 SBI 所需的 UART0 并指定 stdout。
+ *
+ * Copyright (c) 2026-2027 Mango <13084743591@163.com>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+#include "quard_star.dtsi"
+
+/ {
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	compatible = "mango,quard-star";
+	model = "mango,quard-star,qemu";
+
+	chosen {
+		stdout-path = "/soc/uart0@10000000";
+	};
+
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x40000000>;
+	};
+
+	cpus {
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		timebase-frequency = <10000000>;
+	};
+
+	soc {
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		compatible = "simple-bus";
+		ranges;
+	};
+};
+
+/* 使能 SBI 所需的设备 */
+&uart0 {
+	status = "okay";
+};
