@@ -35,6 +35,19 @@ ${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
     $SHELL_FOLDER/output/opensbi/fw_jump.elf > $SHELL_FOLDER/output/opensbi/fw_jump.lst
 cd ..
 
+# Trusted FW（可信域测试固件）
+if [ ! -d "$SHELL_FOLDER/output/trusted_fw" ]; then
+mkdir -p "$SHELL_FOLDER/output/trusted_fw"
+fi
+cd trusted_fw
+${CROSS_PREFIX}gcc -x assembler-with-cpp -fno-pie -c start.S -o $SHELL_FOLDER/output/trusted_fw/start.o
+${CROSS_PREFIX}gcc -nostartfiles -fno-pie -T./trusted_fw.lds -Wl,-Map=$SHELL_FOLDER/output/trusted_fw/trusted_fw.map \
+    -Wl,--gc-sections $SHELL_FOLDER/output/trusted_fw/start.o -o $SHELL_FOLDER/output/trusted_fw/trusted_fw.elf
+${CROSS_PREFIX}objcopy -O binary -S $SHELL_FOLDER/output/trusted_fw/trusted_fw.elf $SHELL_FOLDER/output/trusted_fw/trusted_fw.bin
+${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
+    $SHELL_FOLDER/output/trusted_fw/trusted_fw.elf > $SHELL_FOLDER/output/trusted_fw/trusted_fw.lst
+cd ..
+
 # 设备树（DTS → DTB）
 if [ ! -d "$SHELL_FOLDER/output/sbi" ]; then
 mkdir -p "$SHELL_FOLDER/output/sbi"
@@ -51,4 +64,5 @@ dd of=fw.bin bs=1k count=32k if=/dev/zero 2>/dev/null
 dd of=fw.bin bs=1k conv=notrunc seek=0 if=fsbl.bin 2>/dev/null
 dd of=fw.bin bs=1k conv=notrunc seek=512 if=$SHELL_FOLDER/output/sbi/quard_star_sbi.dtb 2>/dev/null
 dd of=fw.bin bs=1k conv=notrunc seek=2K if=$SHELL_FOLDER/output/opensbi/fw_jump.bin 2>/dev/null
+dd of=fw.bin bs=1k conv=notrunc seek=4K if=$SHELL_FOLDER/output/trusted_fw/trusted_fw.bin 2>/dev/null
 cd $SHELL_FOLDER
