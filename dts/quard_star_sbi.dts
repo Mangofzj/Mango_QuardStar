@@ -1,6 +1,10 @@
 /*
  * Quard Star OpenSBI 设备树。
- * 在 quard_star.dtsi 基础上使能 SBI 所需的 UART0 并指定 stdout。
+ * 在 quard_star.dtsi 基础上指定 stdout、使能设备，并配置 OpenSBI Domain。
+ *
+ * Domain 划分：
+ *   trusted-domain   cpu7   全权限，运行 trusted_fw（S 模式）
+ *   untrusted-domain cpu0-6 部分权限，运行 Linux（后续章节）
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -16,6 +20,57 @@
 
 	chosen {
 		stdout-path = "/soc/uart0@10000000";
+
+		opensbi-domains {
+			compatible = "opensbi,domain,config";
+
+			/* 可信内存区：DDR 高 256MB（0xb0000000-0xc0000000） */
+			tmem: tmem {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0xb0000000>;
+				order = <28>;
+			};
+
+			/* 可信 MMIO 区：UART2 */
+			tuart: tuart {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0x10002000>;
+				order = <12>;
+				mmio;
+				devices = <&uart2>;
+			};
+
+			/* 全地址空间 */
+			allmem: allmem {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0x0>;
+				order = <64>;
+			};
+
+			/* 可信域：cpu7，全权限 */
+			tdomain: trusted-domain {
+				compatible = "opensbi,domain,instance";
+				possible-harts = <&cpu7>;
+				regions = <&tmem 0x7>, <&tuart 0x7>, <&allmem 0x7>;
+				boot-hart = <&cpu7>;
+				next-arg1 = <0x0 0x00000000>;
+				next-addr = <0x0 0xb0000000>;
+				next-mode = <0x1>;
+				system-reset-allowed;
+			};
+
+			/* 非可信域：cpu0-6，无权访问可信区 */
+			udomain: untrusted-domain {
+				compatible = "opensbi,domain,instance";
+				possible-harts = <&cpu0 &cpu1 &cpu2 &cpu3 &cpu4 &cpu5 &cpu6>;
+				regions = <&tmem 0x0>, <&tuart 0x0>, <&allmem 0x7>;
+				boot-hart = <&cpu0>;
+				next-arg1 = <0x0 0x82200000>;
+				next-addr = <0x0 0x82000000>;
+				next-mode = <0x1>;
+				system-reset-allowed;
+			};
+		};
 	};
 
 	memory@80000000 {
@@ -40,4 +95,41 @@
 /* 使能 SBI 所需的设备 */
 &uart0 {
 	status = "okay";
+};
+
+&uart2 {
+	status = "okay";
+};
+
+/* 分配 CPU 到对应 Domain */
+&cpu0 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu1 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu2 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu3 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu4 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu5 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu6 {
+	opensbi-domain = <&udomain>;
+};
+
+&cpu7 {
+	opensbi-domain = <&tdomain>;
 };
