@@ -1,12 +1,15 @@
 /*
  * FSBL — First Stage Boot Loader。
- * 从 Parallel NOR Flash (0x20000000) 启动，将 OpenSBI 固件、设备树与可信固件搬到 DDR 后跳转 OpenSBI。
+ * 从 Parallel NOR Flash (0x20000000) 启动，将 OpenSBI 固件、设备树、可信固件
+ * 与 U-Boot 搬到 DDR 后跳转 OpenSBI。
  * 所有 hart 均参与加载，非 0 hart 延时等待镜像搬运完成后再跳转。
  *
  * Parallel NOR Flash 布局：
  *   偏移 0x80000   quard_star_sbi.dtb
+ *   偏移 0x100000  quard_star_uboot.dtb
  *   偏移 0x200000  fw_jump.bin
  *   偏移 0x400000  trusted_fw.bin
+ *   偏移 0x800000  u-boot.bin
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -74,6 +77,24 @@ _start:
     slli    a1, a1, 20  // a1 = 0xb0000000
     li      a2, 0xb04
     slli    a2, a2, 20  // a2 = 0xb0400000
+    load_data    a0, a1, a2
+
+    /* 加载 quard_star_uboot.dtb：Parallel NOR Flash 0x20100000 → DDR 0x82000000（512KB） */
+    li      a0, 0x201
+    slli    a0, a0, 20  // a0 = 0x20100000
+    li      a1, 0x820
+    slli    a1, a1, 20  // a1 = 0x82000000
+    li      a2, 0x8208
+    slli    a2, a2, 16  // a2 = 0x82080000
+    load_data    a0, a1, a2
+
+    /* 加载 u-boot.bin：Parallel NOR Flash 0x20800000 → DDR 0x80200000（4MB） */
+    li      a0, 0x208
+    slli    a0, a0, 20  // a0 = 0x20800000
+    li      a1, 0x802
+    slli    a1, a1, 20  // a1 = 0x80200000
+    li      a2, 0x806
+    slli    a2, a2, 20  // a2 = 0x80600000
     load_data    a0, a1, a2
 
     /* hart 0 直接跳转，其余 hart 延时等待镜像搬运完成后跳转 */
