@@ -1,0 +1,212 @@
+/*
+ * Quard Star U-Boot 设备树。
+ * 供 U-Boot 及后续 Linux 使用，与 OpenSBI 设备树（quard_star_sbi.dts）不同，
+ * 不含 Domain 配置。仅声明 U-Boot 早期需要的节点：
+ * CPU、PLIC、CLINT、串口与主内存。
+ *
+ * 注意：CLINT 使用 riscv,clint0 兼容节点，硬件上复用 ACLINT mtimer
+ * （mtime 位于 0x200bff8，与 clint0 reg 偏移 0xbff8 恰好重合）。
+ *
+ * Copyright (c) 2026-2027 Mango <13084743591@163.com>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+/dts-v1/;
+
+/ {
+	#address-cells = <0x2>;
+	#size-cells = <0x2>;
+	compatible = "mango,quard-star";
+	model = "mango,quard-star,qemu";
+
+	chosen {
+		bootargs = "console=ttyS0";
+		stdout-path = "/soc/uart0@10000000";
+	};
+
+	/* 主内存：768MB @ 0x80000000，预留 0xb0000000 以上为可信域 */
+	memory@80000000 {
+		device_type = "memory";
+		reg = <0x0 0x80000000 0x0 0x30000000>;
+	};
+
+	cpus {
+		#address-cells = <0x1>;
+		#size-cells = <0x0>;
+		timebase-frequency = <10000000>;
+
+		cpu0: cpu@0 {
+			device_type = "cpu";
+			reg = <0x0>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu0_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu1: cpu@1 {
+			device_type = "cpu";
+			reg = <0x1>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu1_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu2: cpu@2 {
+			device_type = "cpu";
+			reg = <0x2>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu2_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu3: cpu@3 {
+			device_type = "cpu";
+			reg = <0x3>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu3_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu4: cpu@4 {
+			device_type = "cpu";
+			reg = <0x4>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu4_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu5: cpu@5 {
+			device_type = "cpu";
+			reg = <0x5>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu5_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu6: cpu@6 {
+			device_type = "cpu";
+			reg = <0x6>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu6_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+
+		cpu7: cpu@7 {
+			device_type = "cpu";
+			reg = <0x7>;
+			status = "okay";
+			compatible = "riscv";
+			riscv,isa = "rv64imafdchsu";
+			mmu-type = "riscv,sv48";
+
+			cpu7_intc: interrupt-controller {
+				#interrupt-cells = <0x1>;
+				interrupt-controller;
+				compatible = "riscv,cpu-intc";
+			};
+		};
+	};
+
+	soc {
+		#address-cells = <0x2>;
+		#size-cells = <0x2>;
+		compatible = "simple-bus";
+		ranges;
+
+		clint: clint@2000000 {
+			compatible = "riscv,clint0";
+			reg = <0x0 0x02000000 0x0 0x10000>;
+			interrupts-extended = <&cpu0_intc 0x3 &cpu0_intc 0x7>,
+								  <&cpu1_intc 0x3 &cpu1_intc 0x7>,
+								  <&cpu2_intc 0x3 &cpu2_intc 0x7>,
+								  <&cpu3_intc 0x3 &cpu3_intc 0x7>,
+								  <&cpu4_intc 0x3 &cpu4_intc 0x7>,
+								  <&cpu5_intc 0x3 &cpu5_intc 0x7>,
+								  <&cpu6_intc 0x3 &cpu6_intc 0x7>,
+								  <&cpu7_intc 0x3 &cpu7_intc 0x7>;
+		};
+
+		plic: plic@c000000 {
+			compatible = "riscv,plic0";
+			reg = <0x0 0x0c000000 0x0 0x210000>;
+			interrupts-extended = <&cpu0_intc 0xb &cpu0_intc 0x9>,
+								  <&cpu1_intc 0xb &cpu1_intc 0x9>,
+								  <&cpu2_intc 0xb &cpu2_intc 0x9>,
+								  <&cpu3_intc 0xb &cpu3_intc 0x9>,
+								  <&cpu4_intc 0xb &cpu4_intc 0x9>,
+								  <&cpu5_intc 0xb &cpu5_intc 0x9>,
+								  <&cpu6_intc 0xb &cpu6_intc 0x9>,
+								  <&cpu7_intc 0xb &cpu7_intc 0x9>;
+			interrupt-controller;
+			#interrupt-cells = <0x1>;
+			riscv,ndev = <127>;
+		};
+
+		uart0: uart0@10000000 {
+			compatible = "ns16550a";
+			reg = <0x0 0x10000000 0x0 0x1000>;
+			interrupts = <10>;
+			interrupt-parent = <&plic>;
+			clock-frequency = <0x384000>;
+			status = "okay";
+		};
+
+		uart1: uart1@10001000 {
+			compatible = "ns16550a";
+			reg = <0x0 0x10001000 0x0 0x1000>;
+			interrupts = <11>;
+			interrupt-parent = <&plic>;
+			clock-frequency = <0x384000>;
+			status = "okay";
+		};
+	};
+};
