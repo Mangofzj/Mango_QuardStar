@@ -1,6 +1,6 @@
 /*
  * Trusted FW — 可信域测试固件。
- * 由 OpenSBI 加载到 DDR 0xb0000000，在 trusted-domain（cpu7）中运行，
+ * 由 OpenSBI 加载到 DDR 0xbf800000，在 trusted-domain（cpu7）中运行，
  * 向 UART2 打印 "Hello Quard Star Board!\r\n" 后进入死循环。
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>

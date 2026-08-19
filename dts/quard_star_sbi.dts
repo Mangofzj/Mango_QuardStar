@@ -4,7 +4,7 @@
  *
  * Domain 划分：
  *   trusted-domain   cpu7   全权限，运行 trusted_fw（S 模式）
- *   untrusted-domain cpu0-6 部分权限，运行 Linux（后续章节）
+ *   untrusted-domain cpu0-6 部分权限，运行 U-Boot（后续章节引导 Linux）
  *
  * Copyright (c) 2026-2027 Mango <13084743591@163.com>
  * SPDX-License-Identifier: GPL-2.0-or-later
@@ -24,11 +24,30 @@
 		opensbi-domains {
 			compatible = "opensbi,domain,config";
 
-			/* 可信内存区：DDR 高 256MB（0xb0000000-0xc0000000） */
-			tmem: tmem {
+			/* 可信内存区：DDR 高 8MB（0xbf800000-0xc0000000），
+			 * 拆分为 4 段，避开 OpenSBI 固件自身占用的 0xbff80000-0xc0000000 */
+			tmem0: tmem0 {
 				compatible = "opensbi,domain,memregion";
-				base = <0x0 0xb0000000>;
-				order = <28>;
+				base = <0x0 0xbf800000>;
+				order = <22>;
+			};
+
+			tmem1: tmem1 {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0xbfc00000>;
+				order = <21>;
+			};
+
+			tmem2: tmem2 {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0xbfe00000>;
+				order = <20>;
+			};
+
+			tmem3: tmem3 {
+				compatible = "opensbi,domain,memregion";
+				base = <0x0 0xbff00000>;
+				order = <19>;
 			};
 
 			/* 可信 MMIO 区：UART2 */
@@ -47,14 +66,14 @@
 				order = <64>;
 			};
 
-			/* 可信域：cpu7，全权限 */
+			/* 可信域：cpu7，全权限，运行 trusted_fw */
 			tdomain: trusted-domain {
 				compatible = "opensbi,domain,instance";
 				possible-harts = <&cpu7>;
-				regions = <&tmem 0x7>, <&tuart 0x7>, <&allmem 0x7>;
+				regions = <&tmem0 0x7>, <&tmem1 0x7>, <&tmem2 0x7>, <&tmem3 0x7>, <&tuart 0x7>, <&allmem 0x7>;
 				boot-hart = <&cpu7>;
 				next-arg1 = <0x0 0x00000000>;
-				next-addr = <0x0 0xb0000000>;
+				next-addr = <0x0 0xbf800000>;
 				next-mode = <0x1>;
 				system-reset-allowed;
 			};
@@ -63,10 +82,10 @@
 			udomain: untrusted-domain {
 				compatible = "opensbi,domain,instance";
 				possible-harts = <&cpu0 &cpu1 &cpu2 &cpu3 &cpu4 &cpu5 &cpu6>;
-				regions = <&tmem 0x0>, <&tuart 0x0>, <&allmem 0x7>;
+				regions = <&tmem0 0x0>, <&tmem1 0x0>, <&tmem2 0x0>, <&tmem3 0x0>, <&tuart 0x0>, <&allmem 0x7>;
 				boot-hart = <&cpu0>;
-				next-arg1 = <0x0 0x82000000>;
-				next-addr = <0x0 0x80200000>;
+				next-arg1 = <0x0 0xb0000000>;
+				next-addr = <0x0 0xb0200000>;
 				next-mode = <0x1>;
 				system-reset-allowed;
 			};
