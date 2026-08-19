@@ -24,6 +24,13 @@
 		stdout-path = "/soc/uart0@10000000";
 	};
 
+	fw_cfg: fw_cfg@10108000 {
+		compatible = "qemu,fw-cfg-mmio";
+		reg = <0x0 0x10108000 0x0 0x18>;
+		dma-coherent;
+		status = "okay";
+	};
+
 	/* 主内存：1016MB @ 0x80000000，预留 0xbf800000 以上为可信域 */
 	memory@80000000 {
 		device_type = "memory";
@@ -206,6 +213,70 @@
 			interrupts = <11>;
 			interrupt-parent = <&plic>;
 			clock-frequency = <0x384000>;
+			status = "okay";
+		};
+
+		virtio_mmio0: virtio_mmio@10100000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10100000 0x0 0x1000>;
+			interrupts = <1>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio1: virtio_mmio@10101000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10101000 0x0 0x1000>;
+			interrupts = <2>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio2: virtio_mmio@10102000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10102000 0x0 0x1000>;
+			interrupts = <3>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio3: virtio_mmio@10103000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10103000 0x0 0x1000>;
+			interrupts = <4>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio4: virtio_mmio@10104000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10104000 0x0 0x1000>;
+			interrupts = <5>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio5: virtio_mmio@10105000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10105000 0x0 0x1000>;
+			interrupts = <6>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio6: virtio_mmio@10106000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10106000 0x0 0x1000>;
+			interrupts = <7>;
+			interrupt-parent = <&plic>;
+			status = "okay";
+		};
+
+		virtio_mmio7: virtio_mmio@10107000 {
+			compatible = "virtio,mmio";
+			reg = <0x0 0x10107000 0x0 0x1000>;
+			interrupts = <8>;
+			interrupt-parent = <&plic>;
 			status = "okay";
 		};
 	};
