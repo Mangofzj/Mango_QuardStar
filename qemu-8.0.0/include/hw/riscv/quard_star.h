@@ -21,6 +21,7 @@
 
 #define TYPE_RISCV_QUARD_STAR_MACHINE MACHINE_TYPE_NAME("quard-star")
 typedef struct QuardStarState QuardStarState;
+typedef struct FWCfgState FWCfgState;
 DECLARE_INSTANCE_CHECKER(QuardStarState, QUARD_STAR_MACHINE,
                          TYPE_RISCV_QUARD_STAR_MACHINE)
 
@@ -36,6 +37,7 @@ struct QuardStarState {
     RISCVHartArrayState c_cpus;
     DeviceState *plic;
     PFlashCFI01 *flash;
+    FWCfgState *fw_cfg;
 };
 
 /* 内存映射索引 */
@@ -47,12 +49,29 @@ enum {
     QUARD_STAR_UART0,
     QUARD_STAR_UART1,
     QUARD_STAR_UART2,
+    QUARD_STAR_VIRTIO0,
+    QUARD_STAR_VIRTIO1,
+    QUARD_STAR_VIRTIO2,
+    QUARD_STAR_VIRTIO3,
+    QUARD_STAR_VIRTIO4,
+    QUARD_STAR_VIRTIO5,
+    QUARD_STAR_VIRTIO6,
+    QUARD_STAR_VIRTIO7,
+    QUARD_STAR_FW_CFG,
     QUARD_STAR_FLASH,
     QUARD_STAR_DRAM,
 };
 
 /* 外设中断号 */
 enum {
+    QUARD_STAR_VIRTIO0_IRQ = 1,
+    QUARD_STAR_VIRTIO1_IRQ = 2,
+    QUARD_STAR_VIRTIO2_IRQ = 3,
+    QUARD_STAR_VIRTIO3_IRQ = 4,
+    QUARD_STAR_VIRTIO4_IRQ = 5,
+    QUARD_STAR_VIRTIO5_IRQ = 6,
+    QUARD_STAR_VIRTIO6_IRQ = 7,
+    QUARD_STAR_VIRTIO7_IRQ = 8,
     QUARD_STAR_UART0_IRQ = 10,
     QUARD_STAR_UART1_IRQ = 11,
     QUARD_STAR_UART2_IRQ = 12,

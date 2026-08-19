@@ -22,6 +22,7 @@
 #include "hw/riscv/numa.h"
 #include "hw/intc/riscv_aclint.h"
 #include "hw/intc/sifive_plic.h"
+#include "hw/nvram/fw_cfg.h"
 #include "sysemu/device_tree.h"
 #include "sysemu/sysemu.h"
 
@@ -38,6 +39,15 @@ static const MemMapEntry quard_star_memmap[] = {
     [QUARD_STAR_UART0] = { 0x10000000, 0x1000 },  // 串口 0
     [QUARD_STAR_UART1] = { 0x10001000, 0x1000 },  // 串口 1
     [QUARD_STAR_UART2] = { 0x10002000, 0x1000 },  // 串口 2
+    [QUARD_STAR_VIRTIO0] = { 0x10100000, 0x1000 },  // virtio-mmio 0
+    [QUARD_STAR_VIRTIO1] = { 0x10101000, 0x1000 },  // virtio-mmio 1
+    [QUARD_STAR_VIRTIO2] = { 0x10102000, 0x1000 },  // virtio-mmio 2
+    [QUARD_STAR_VIRTIO3] = { 0x10103000, 0x1000 },  // virtio-mmio 3
+    [QUARD_STAR_VIRTIO4] = { 0x10104000, 0x1000 },  // virtio-mmio 4
+    [QUARD_STAR_VIRTIO5] = { 0x10105000, 0x1000 },  // virtio-mmio 5
+    [QUARD_STAR_VIRTIO6] = { 0x10106000, 0x1000 },  // virtio-mmio 6
+    [QUARD_STAR_VIRTIO7] = { 0x10107000, 0x1000 },  // virtio-mmio 7
+    [QUARD_STAR_FW_CFG] = { 0x10108000, 0x18 },  // fw_cfg
     [QUARD_STAR_FLASH] = { 0x20000000, 0x2000000 },  // pflash 32MB
     [QUARD_STAR_DRAM]  = { 0x80000000, 0x0 },  // DDR，大小由 -m 决定
 };
@@ -196,8 +206,62 @@ static void quard_star_cpu_create(MachineState *machine)
 }
 
 /**
+ * @brief 创建 8 组 virtio-mmio 设备
+ * @note  每组占用 4KB MMIO 空间，中断依次连到 PLIC 1-8 号源
+ * @param machine 机器状态
+ * @return 无
+ */
+static void quard_star_virtio_mmio_create(MachineState *machine)
+{
+    QuardStarState *s = QUARD_STAR_MACHINE(machine);
+
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO0].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO0_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO1].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO1_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO2].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO2_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO3].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO3_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO4].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO4_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO5].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO5_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO6].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO6_IRQ));
+    sysbus_create_simple("virtio-mmio",
+        quard_star_memmap[QUARD_STAR_VIRTIO7].base,
+        qdev_get_gpio_in(DEVICE(s->plic), QUARD_STAR_VIRTIO7_IRQ));
+}
+
+/**
+ * @brief 创建 fw_cfg 设备并内置 CPU 数量
+ * @note  通过 -fw_cfg 选项可向虚拟机传递自定义参数
+ * @param machine 机器状态
+ * @return 无
+ */
+static void quard_star_fw_cfg_create(MachineState *machine)
+{
+    QuardStarState *s = QUARD_STAR_MACHINE(machine);
+
+    s->fw_cfg = fw_cfg_init_mem_wide(quard_star_memmap[QUARD_STAR_FW_CFG].base + 8,
+                                     quard_star_memmap[QUARD_STAR_FW_CFG].base, 8,
+                                     quard_star_memmap[QUARD_STAR_FW_CFG].base + 16,
+                                     &address_space_memory);
+    fw_cfg_add_i16(s->fw_cfg, FW_CFG_NB_CPUS, (uint16_t)machine->smp.cpus);
+    rom_set_fw(s->fw_cfg);
+}
+
+/**
  * @brief Quard Star 板卡初始化入口
- * @note  依次初始化 MROM、SRAM、DRAM，创建 CPU Cluster、CLINT、PLIC、串口、pflash
+ * @note  依次初始化 MROM、SRAM、DRAM，创建 CPU Cluster、CLINT、PLIC、串口、pflash、virtio、fw_cfg
  * @param machine 机器状态
  * @return 无
  */
@@ -285,6 +349,12 @@ static void quard_star_machine_init(MachineState *machine)
     quard_star_flash_map(s->flash, quard_star_memmap[QUARD_STAR_FLASH].base,
                          quard_star_memmap[QUARD_STAR_FLASH].size,
                          system_memory);
+
+    /* virtio：8 组 virtio-mmio 设备，后续配置为块设备、网卡等 */
+    quard_star_virtio_mmio_create(machine);
+
+    /* fw_cfg：向虚拟机传递参数的通道 */
+    quard_star_fw_cfg_create(machine);
 
     /* 复位向量：跳转到 pflash 起始地址 */
     quard_star_setup_rom_reset_vec(machine, &s->c_cpus,
