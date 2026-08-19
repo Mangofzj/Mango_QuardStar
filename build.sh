@@ -48,28 +48,28 @@ ${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
     $SHELL_FOLDER/output/trusted_fw/trusted_fw.elf > $SHELL_FOLDER/output/trusted_fw/trusted_fw.lst
 cd ..
 
-# U-Boot（引导加载程序，qemu-riscv64_smode_defconfig 链接地址 0x80200000）
-if [ ! -d "$SHELL_FOLDER/output/uboot" ]; then
-mkdir -p "$SHELL_FOLDER/output/uboot"
-fi
-cd u-boot-2023.04
-make CROSS_COMPILE=${CROSS_PREFIX} qemu-riscv64_smode_defconfig
-make CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc)
-cp u-boot $SHELL_FOLDER/output/uboot/u-boot.elf
-cp u-boot.map $SHELL_FOLDER/output/uboot/u-boot.map
-cp u-boot.bin $SHELL_FOLDER/output/uboot/u-boot.bin
-${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
-    $SHELL_FOLDER/output/uboot/u-boot.elf > $SHELL_FOLDER/output/uboot/u-boot.lst
-cd ..
-
 # 设备树（DTS → DTB）
 if [ ! -d "$SHELL_FOLDER/output/sbi" ]; then
 mkdir -p "$SHELL_FOLDER/output/sbi"
+fi
+if [ ! -d "$SHELL_FOLDER/output/uboot" ]; then
+mkdir -p "$SHELL_FOLDER/output/uboot"
 fi
 cd dts
 cpp -nostdinc -I . -undef -x assembler-with-cpp quard_star_sbi.dts | \
     dtc -I dts -O dtb -o $SHELL_FOLDER/output/sbi/quard_star_sbi.dtb
 dtc -I dts -O dtb -o $SHELL_FOLDER/output/uboot/quard_star_uboot.dtb quard_star_uboot.dts
+cd ..
+
+# U-Boot（引导加载程序，qemu-quard-star_defconfig 链接地址 0xb0200000）
+cd u-boot-2023.04
+make CROSS_COMPILE=${CROSS_PREFIX} qemu-quard-star_defconfig
+make CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc) DEVICE_TREE=../../../../output/uboot/quard_star_uboot
+cp u-boot $SHELL_FOLDER/output/uboot/u-boot.elf
+cp u-boot.map $SHELL_FOLDER/output/uboot/u-boot.map
+cp u-boot.bin $SHELL_FOLDER/output/uboot/u-boot.bin
+${CROSS_PREFIX}objdump --source --demangle --disassemble --reloc --wide \
+    $SHELL_FOLDER/output/uboot/u-boot.elf > $SHELL_FOLDER/output/uboot/u-boot.lst
 cd ..
 
 # 打包 Parallel NOR Flash 镜像（32MB）

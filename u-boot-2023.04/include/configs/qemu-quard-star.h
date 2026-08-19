@@ -39,26 +39,11 @@
 			"bootm ${kernel_start} - ${fdtcontroladdr};" \
 		"fi\0"
 
-#define BOOTENV_DEV_NAND(devtypeu, devtypel, instance) \
-	"bootcmd_" #devtypel #instance "=" \
-		"if test ${mtdids} = '' || test ${mtdparts} = '' ; then " \
-			"echo NAND boot disabled: No mtdids and/or mtdparts; " \
-		"else " \
-			"run nandboot; " \
-		"fi\0"
-
 #define BOOTENV_DEV_NAME_QEMU(devtypeu, devtypel, instance) \
-	#devtypel #instance " "
-
-#define BOOTENV_DEV_NAME_NAND(devtypeu, devtypel, instance) \
-	#devtypel #instance " "
+	#devtypel " "
 
 #define BOOT_TARGET_DEVICES(func) \
-	func(VIRTIO, virtio, 0)       \
-	func(NAND, nand, 0)           \
-	func(MMC, mmc, 0)             \
-	func(QEMU, qemu, na)          \
-	func(DHCP, dhcp, na)
+	func(QEMU, qemu, na)
 
 #include <config_distro_bootcmd.h>
 
