@@ -83,3 +83,13 @@ dd of=fw.bin bs=1k conv=notrunc seek=2K if=$SHELL_FOLDER/output/opensbi/fw_jump.
 dd of=fw.bin bs=1k conv=notrunc seek=4K if=$SHELL_FOLDER/output/trusted_fw/trusted_fw.bin 2>/dev/null
 dd of=fw.bin bs=1k conv=notrunc seek=8K if=$SHELL_FOLDER/output/uboot/u-boot.bin 2>/dev/null
 cd $SHELL_FOLDER
+
+# Linux 内核（ch11：编译生成 Image）
+if [ ! -d "$SHELL_FOLDER/output/linux_kernel" ]; then
+mkdir -p "$SHELL_FOLDER/output/linux_kernel"
+fi
+cd linux-6.1.11
+make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} quard_star_defconfig
+make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc)
+cp arch/riscv/boot/Image $SHELL_FOLDER/output/linux_kernel/Image
+cd $SHELL_FOLDER
