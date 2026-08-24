@@ -43,6 +43,7 @@
 	#devtypel " "
 
 #define BOOT_TARGET_DEVICES(func) \
+	func(VIRTIO, virtio, 0)       \
 	func(QEMU, qemu, na)
 
 #include <config_distro_bootcmd.h>
