@@ -107,9 +107,9 @@ cd qemu-8.0.0 && make -j$(nproc)
 - **章节概览**：
 | 阶段 | 章节 | 内容 |
 |------|------|------|
-| 板卡基础 | ch1-ch4 | 搭建 QEMU 环境、添加 Quard-Star 板、中断控制器、串口、pflash、测试固件 |
+| 板卡基础 | ch1-ch4 | 搭建 QEMU 环境、添加 Quard Star 板、中断控制器、串口、pflash、测试固件 |
 | 启动引导 | ch5-ch9 | OpenSBI、设备树、U-Boot 移植、内存重规划 |
-| 内核与文件系统 | ch10-ch15 | virtio/fw_cfg、Linux Kernel 启动、busybox、根文件系统、动态链接、多用户 |
+| 内核与文件系统 | ch10-ch15 | virtio/fw_cfg、Linux Kernel 启动、BusyBox、根文件系统、动态链接、多用户 |
 | 外设与应用 | ch16-ch25 | Framebuffer、bash/Qt/网络/SSHD、FreeRTOS 移植等 |
 | 扩展 | ext1-ext6 | kgdb 调试、gcc profile、gdbstub、CAN 总线、ifplugd 等 |
 
