@@ -93,3 +93,26 @@ make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} quard_star_defconfig
 make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc)
 cp arch/riscv/boot/Image $SHELL_FOLDER/output/linux_kernel/Image
 cd $SHELL_FOLDER
+
+# BusyBox（ch12：静态编译，提供 init 与基础工具集）
+if [ ! -d "$SHELL_FOLDER/output/busybox" ]; then
+mkdir -p "$SHELL_FOLDER/output/busybox"
+fi
+cd busybox-1.33.2
+make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} quard_star_defconfig
+make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc)
+make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} install
+cd $SHELL_FOLDER
+
+# 组装 rootfs.img（ch11 分区 + ch12 填充 BusyBox，无 root）
+if [ ! -d "$SHELL_FOLDER/output/rootfs/bootfs" ]; then
+mkdir -p "$SHELL_FOLDER/output/rootfs/bootfs"
+fi
+if [ ! -d "$SHELL_FOLDER/output/rootfs/rootfs" ]; then
+mkdir -p "$SHELL_FOLDER/output/rootfs/rootfs"
+fi
+cp $SHELL_FOLDER/output/linux_kernel/Image $SHELL_FOLDER/output/rootfs/bootfs/Image
+cp $SHELL_FOLDER/output/uboot/quard_star_uboot.dtb $SHELL_FOLDER/output/rootfs/bootfs/quard_star.dtb
+$SHELL_FOLDER/u-boot-2023.04/tools/mkimage -A riscv -O linux -T script -C none -a 0 -e 0 -n "Distro Boot Script" -d $SHELL_FOLDER/dts/quard_star_uboot.cmd $SHELL_FOLDER/output/rootfs/bootfs/boot.scr
+cp -r $SHELL_FOLDER/output/busybox/* $SHELL_FOLDER/output/rootfs/rootfs/
+$SHELL_FOLDER/build_rootfs/generate_rootfs.sh $SHELL_FOLDER/output/rootfs/rootfs.img $SHELL_FOLDER/output/rootfs/bootfs $SHELL_FOLDER/output/rootfs/rootfs
