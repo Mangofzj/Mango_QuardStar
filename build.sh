@@ -104,7 +104,7 @@ make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} -j$(nproc)
 make ARCH=riscv CROSS_COMPILE=${CROSS_PREFIX} install
 cd $SHELL_FOLDER
 
-# 组装 rootfs.img（ch11 分区 + ch12 填充 BusyBox，无 root）
+# 组装 rootfs.img（ch11 分区 + ch12 BusyBox + ch13 配置脚本与目录）
 if [ ! -d "$SHELL_FOLDER/output/rootfs/bootfs" ]; then
 mkdir -p "$SHELL_FOLDER/output/rootfs/bootfs"
 fi
@@ -115,4 +115,10 @@ cp $SHELL_FOLDER/output/linux_kernel/Image $SHELL_FOLDER/output/rootfs/bootfs/Im
 cp $SHELL_FOLDER/output/uboot/quard_star_uboot.dtb $SHELL_FOLDER/output/rootfs/bootfs/quard_star.dtb
 $SHELL_FOLDER/u-boot-2023.04/tools/mkimage -A riscv -O linux -T script -C none -a 0 -e 0 -n "Distro Boot Script" -d $SHELL_FOLDER/dts/quard_star_uboot.cmd $SHELL_FOLDER/output/rootfs/bootfs/boot.scr
 cp -r $SHELL_FOLDER/output/busybox/* $SHELL_FOLDER/output/rootfs/rootfs/
+cp -r $SHELL_FOLDER/target_root_script/* $SHELL_FOLDER/output/rootfs/rootfs/
+mkdir -p $SHELL_FOLDER/output/rootfs/rootfs/proc
+mkdir -p $SHELL_FOLDER/output/rootfs/rootfs/sys
+mkdir -p $SHELL_FOLDER/output/rootfs/rootfs/dev
+mkdir -p $SHELL_FOLDER/output/rootfs/rootfs/tmp
+chmod +x $SHELL_FOLDER/output/rootfs/rootfs/etc/init.d/rcS
 $SHELL_FOLDER/build_rootfs/generate_rootfs.sh $SHELL_FOLDER/output/rootfs/rootfs.img $SHELL_FOLDER/output/rootfs/bootfs $SHELL_FOLDER/output/rootfs/rootfs
