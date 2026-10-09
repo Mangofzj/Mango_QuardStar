@@ -6,5 +6,5 @@ mount -a
 mount -a
 
 echo "---------------------------------------------"
-echo " Welcome debugging on Qemu Quard Star board! "
+echo " Welcome debugging on QEMU Quard Star Board! "
 echo "---------------------------------------------"
