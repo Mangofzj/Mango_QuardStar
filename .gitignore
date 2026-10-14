@@ -1,6 +1,6 @@
 # Build output
-output/
-qemu-8.0.0/build/
+/build/
+/output/
 
 # Editor/IDE
 .vscode/
@@ -19,4 +19,4 @@ __pycache__/
 Thumbs.db
 
 # Temp files
-temp/
+/temp/
